@@ -142,7 +142,7 @@ with col_filtros:
     r1 = st.columns(4)
 ...
 
-    with c_todo: 
+    with c_todo:
         st.markdown('<span id="chip-todo"></span>', unsafe_allow_html=True)
         st.checkbox("TODO", key="filtro_todo", on_change=_cb_todo)
 
