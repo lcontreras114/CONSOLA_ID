@@ -38,6 +38,7 @@ def _load_all():
 
 
 def _ensure_cache():
+    global _cache_canales, _cache_ts
     with _cache_lock:
         now = time.time()
         if _cache_canales is None or (now - _cache_ts) > CACHE_TTL_SECONDS:
