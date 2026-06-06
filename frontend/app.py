@@ -142,23 +142,23 @@ with col_filtros:
     r1 = st.columns(4)
 ...
 
-    with c_todo:
-        st.markdown('<span id="chip-todo"></span>', unsafe_allow_html=True)
-        st.checkbox("TODO", key="filtro_todo", on_change=_cb_todo)
+with c_todo:
+    st.markdown('<span id="chip-todo"></span>', unsafe_allow_html=True)
+    st.checkbox("TODO", key="filtro_todo", on_change=_cb_todo)
 
-    with c_grilla:
-        r1 = st.columns(4)
-        for j, item in enumerate(MATRIZ_FILTROS[0:4]):
-            with r1[j]:
-                st.checkbox(item, key=f"filtro_{item}", on_change=_cb_tipo)
-        r2 = st.columns(4)
-        for j, item in enumerate(MATRIZ_FILTROS[4:8]):
-            with r2[j]:
-                st.checkbox(item, key=f"filtro_{item}", on_change=_cb_tipo)
-        r3 = st.columns(4)
-        for j, item in enumerate(MATRIZ_FILTROS[8:12]):
-            with r3[j]:
-                st.checkbox(item, key=f"filtro_{item}", on_change=_cb_tipo)
+with c_grilla:
+    r1 = st.columns(4)
+    for j, item in enumerate(MATRIZ_FILTROS[0:4]):
+        with r1[j]:
+            st.checkbox(item, key=f"filtro_{item}", on_change=_cb_tipo)
+    r2 = st.columns(4)
+    for j, item in enumerate(MATRIZ_FILTROS[4:8]):
+        with r2[j]:
+            st.checkbox(item, key=f"filtro_{item}", on_change=_cb_tipo)
+    r3 = st.columns(4)
+    for j, item in enumerate(MATRIZ_FILTROS[8:12]):
+        with r3[j]:
+            st.checkbox(item, key=f"filtro_{item}", on_change=_cb_tipo)
 
 with col_logout:
     st.markdown(
