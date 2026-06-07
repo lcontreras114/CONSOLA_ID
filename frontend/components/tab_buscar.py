@@ -36,7 +36,7 @@ def _cb_tipo():
     else:
         st.session_state.filtro_todo = True
 
-# AGREGAMOS 'token' COMO PARÁMETRO AQUÍ
+
 def _build_resultado_html(resultados: list, token: str) -> str:
     backend_url = st.secrets["BACKEND_URL"].rstrip("/")
     html = """
@@ -70,7 +70,8 @@ def _build_resultado_html(resultados: list, token: str) -> str:
             boton.classList.add('copiado');
             setTimeout(()=>{boton.innerHTML=txtOrig; boton.classList.remove('copiado');}, 1400);
             
-            // LA MAGIA ESTÁ AQUÍ: Le enviamos el Token en los Headers
+            console.log('Intentando guardar ID en historial:', id);
+            
             fetch('""" + backend_url + """/audit/history', {
                 method:'POST',
                 headers:{
@@ -78,7 +79,17 @@ def _build_resultado_html(resultados: list, token: str) -> str:
                     'Authorization':'Bearer """ + token + """'
                 },
                 body:JSON.stringify({id:id,desc:desc,version:version,tipo:tipo,count:1})
-            }).catch(()=>{});
+            })
+            .then(res => {
+                if(!res.ok) {
+                    console.error('Error del servidor Render al guardar historial. Código:', res.status);
+                } else {
+                    console.log('¡Historial guardado con éxito en el backend para el ID:', id);
+                }
+            })
+            .catch(err => {
+                console.error('Error crítico de red o CORS en el navegador:', err);
+            });
         }
     </script>
     <table>
@@ -120,7 +131,7 @@ def _build_resultado_html(resultados: list, token: str) -> str:
     html += "</table>"
     return html
 
-# AGREGAMOS 'token' COMO PARÁMETRO AQUÍ
+
 def _build_history_html(items: list, token: str) -> str:
     backend_url = st.secrets["BACKEND_URL"].rstrip("/")
     items_js = []
@@ -202,7 +213,13 @@ def _build_history_html(items: list, token: str) -> str:
                 fetch('{backend_url}/audit/history', {{
                     method:'DELETE',
                     headers: {{'Authorization': 'Bearer {token}'}}
-                }}).catch(()=>{{}});
+                }})
+                .then(res => {{
+                    if(!res.ok) console.error('Error al borrar historial:', res.status);
+                }})
+                .catch(err => {{
+                    console.error('Error de red al borrar historial:', err);
+                }});
             }}
         }}
         
@@ -253,15 +270,12 @@ def render(token: str):
                     f"Resultados encontrados: {len(resultados)}</div>",
                     unsafe_allow_html=True,
                 )
-                # AQUÍ LE PASAMOS EL TOKEN A LA TABLA
                 html_tabla = _build_resultado_html(resultados, token)
                 components.html(html_tabla, height=60 + len(resultados) * 52, scrolling=False)
             else:
                 st.info("No se encontraron coincidencias.")
 
     with col_hist:
-        # Load history from backend
         history_items = api_client.get_history()
-        # AQUÍ LE PASAMOS EL TOKEN AL HISTORIAL
         html_hist = _build_history_html(history_items, token)
         components.html(html_hist, height=950, scrolling=False)
