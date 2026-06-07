@@ -12,7 +12,7 @@ import os
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")  # reuse config
 
 BASE = BACKEND_URL.rstrip("/")
-TIMEOUT = 10
+TIMEOUT = 60
 
 
 def _headers() -> dict:
