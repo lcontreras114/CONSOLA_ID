@@ -15,14 +15,12 @@ MATRIZ_FILTROS = [
     "I.ACTIVA", "I.AMBIENTAL", "C. COMERCIAL", "A.ESPECIAL",
 ]
 
-
 def _init_filtros():
     if "filtro_todo" not in st.session_state:
         st.session_state.filtro_todo = True
     for t in MATRIZ_FILTROS:
         if f"filtro_{t}" not in st.session_state:
             st.session_state[f"filtro_{t}"] = False
-
 
 def _cb_todo():
     if st.session_state.filtro_todo:
@@ -32,15 +30,14 @@ def _cb_todo():
         if not any(st.session_state.get(f"filtro_{t}", False) for t in MATRIZ_FILTROS):
             st.session_state.filtro_todo = True
 
-
 def _cb_tipo():
     if any(st.session_state.get(f"filtro_{t}", False) for t in MATRIZ_FILTROS):
         st.session_state.filtro_todo = False
     else:
         st.session_state.filtro_todo = True
 
-
-def _build_resultado_html(resultados: list) -> str:
+# AGREGAMOS 'token' COMO PARÁMETRO AQUÍ
+def _build_resultado_html(resultados: list, token: str) -> str:
     backend_url = st.secrets["BACKEND_URL"].rstrip("/")
     html = """
     <style>
@@ -72,9 +69,14 @@ def _build_resultado_html(resultados: list) -> str:
             boton.innerHTML = '✓ Copiado';
             boton.classList.add('copiado');
             setTimeout(()=>{boton.innerHTML=txtOrig; boton.classList.remove('copiado');}, 1400);
+            
+            // LA MAGIA ESTÁ AQUÍ: Le enviamos el Token en los Headers
             fetch('""" + backend_url + """/audit/history', {
                 method:'POST',
-                headers:{'Content-Type':'application/json'},
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':'Bearer """ + token + """'
+                },
                 body:JSON.stringify({id:id,desc:desc,version:version,tipo:tipo,count:1})
             }).catch(()=>{});
         }
@@ -118,8 +120,8 @@ def _build_resultado_html(resultados: list) -> str:
     html += "</table>"
     return html
 
-
-def _build_history_html(items: list) -> str:
+# AGREGAMOS 'token' COMO PARÁMETRO AQUÍ
+def _build_history_html(items: list, token: str) -> str:
     backend_url = st.secrets["BACKEND_URL"].rstrip("/")
     items_js = []
     for it in items:
@@ -197,7 +199,10 @@ def _build_history_html(items: list) -> str:
             if(confirm("¿Eliminar todo el historial?")) {{
                 _items = [];
                 render();
-                fetch('{backend_url}/audit/history', {{method:'DELETE'}}).catch(()=>{{}});
+                fetch('{backend_url}/audit/history', {{
+                    method:'DELETE',
+                    headers: {{'Authorization': 'Bearer {token}'}}
+                }}).catch(()=>{{}});
             }}
         }}
         
@@ -248,7 +253,8 @@ def render(token: str):
                     f"Resultados encontrados: {len(resultados)}</div>",
                     unsafe_allow_html=True,
                 )
-                html_tabla = _build_resultado_html(resultados)
+                # AQUÍ LE PASAMOS EL TOKEN A LA TABLA
+                html_tabla = _build_resultado_html(resultados, token)
                 components.html(html_tabla, height=60 + len(resultados) * 52, scrolling=False)
             else:
                 st.info("No se encontraron coincidencias.")
@@ -256,5 +262,6 @@ def render(token: str):
     with col_hist:
         # Load history from backend
         history_items = api_client.get_history()
-        html_hist = _build_history_html(history_items)
+        # AQUÍ LE PASAMOS EL TOKEN AL HISTORIAL
+        html_hist = _build_history_html(history_items, token)
         components.html(html_hist, height=950, scrolling=False)
