@@ -41,6 +41,7 @@ def _cb_tipo():
 
 
 def _build_resultado_html(resultados: list) -> str:
+    backend_url = st.secrets["BACKEND_URL"].rstrip("/")
     html = """
     <style>
         :root {
@@ -71,7 +72,7 @@ def _build_resultado_html(resultados: list) -> str:
             boton.innerHTML = '✓ Copiado';
             boton.classList.add('copiado');
             setTimeout(()=>{boton.innerHTML=txtOrig; boton.classList.remove('copiado');}, 1400);
-            fetch('/audit/history', {
+            fetch('""" + backend_url + """/audit/history', {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({id:id,desc:desc,version:version,tipo:tipo,count:1})
@@ -119,6 +120,7 @@ def _build_resultado_html(resultados: list) -> str:
 
 
 def _build_history_html(items: list) -> str:
+    backend_url = st.secrets["BACKEND_URL"].rstrip("/")
     items_js = []
     for it in items:
         items_js.append({
@@ -150,7 +152,7 @@ def _build_history_html(items: list) -> str:
              border-radius:8px;cursor:pointer;color:var(--text);transition:all 0.2s;
              overflow:hidden;box-shadow:0 2px 8px rgba(30,95,168,0.15);}}
         .bh:hover{{background:var(--btn-hover);transform:translateY(-2px);
-                   border-color:#3B82F6;box-shadow:0 4px 12px rgba(59,130,246,0.2);}}
+                    border-color:#3B82F6;box-shadow:0 4px 12px rgba(59,130,246,0.2);}}
         .bh.copiado{{background:#065F46!important;border-color:#059669!important;}}
         .hd{{font-size:10px;color:#64748B;text-align:center;padding-bottom:3px;
              border-bottom:1px solid #1E3A5F;margin-bottom:3px;
@@ -174,10 +176,10 @@ def _build_history_html(items: list) -> str:
             var h = "";
             _items.forEach(function(it) {{
                 h += "<button class='bh' onclick=\\"copy(\\'"+it.id+"\\',\\'"+it.desc+"\\',this)\\" title=\\""+it.desc+"\\">"
-                   + "<div class='hd'>"+it.desc+"</div>"
-                   + "<div class='hv'>"+it.id+"</div>"
-                   + "<div class='hti'>"+it.version+" · "+it.tipo+"</div>"
-                   + "</button>";
+                    + "<div class='hd'>"+it.desc+"</div>"
+                    + "<div class='hv'>"+it.id+"</div>"
+                    + "<div class='hti'>"+it.version+" · "+it.tipo+"</div>"
+                    + "</button>";
             }});
             c.innerHTML = h;
         }}
@@ -195,7 +197,7 @@ def _build_history_html(items: list) -> str:
             if(confirm("¿Eliminar todo el historial?")) {{
                 _items = [];
                 render();
-                fetch('/audit/history', {{method:'DELETE'}}).catch(()=>{{}});
+                fetch('{backend_url}/audit/history', {{method:'DELETE'}}).catch(()=>{{}});
             }}
         }}
         
