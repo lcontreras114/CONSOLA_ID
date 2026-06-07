@@ -19,14 +19,10 @@ app = FastAPI(
 )
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
-# Allow the Streamlit frontend (any localhost port during dev)
+# Allow the Streamlit frontend from anywhere
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8501",
-        "http://127.0.0.1:8501",
-        "http://localhost:3000",
-    ],
+    allow_origins=["*"],  # <- ¡Aquí está la magia liberadora!
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
