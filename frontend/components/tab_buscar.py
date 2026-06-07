@@ -227,11 +227,11 @@ def _build_history_html(items: list, token: str) -> str:
         }}
         
         // Escucha cambios instantáneos desde la tabla de resultados
-        window.addEventListener('storage', function(e) {
-            if(e.key === 'audit_hist_trigger') {
+        window.addEventListener('storage', function(e) {{
+            if(e.key === 'audit_hist_trigger') {{
                 render();
-            }
-        });
+            }}
+        }});
 
         // Verificación rápida de respaldo cada 300ms para asegurar fluidez máxima
         setInterval(render, 300);
