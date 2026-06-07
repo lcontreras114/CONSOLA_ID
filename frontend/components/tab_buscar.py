@@ -70,8 +70,20 @@ def _build_resultado_html(resultados: list, token: str) -> str:
             boton.classList.add('copiado');
             setTimeout(()=>{boton.innerHTML=txtOrig; boton.classList.remove('copiado');}, 1400);
             
-            console.log('Intentando guardar ID en historial:', id);
+            // ACELERADOR LOCAL: Guardamos al instante en la memoria del navegador
+            try {
+                let localHist = JSON.parse(localStorage.getItem('audit_local_hist') || '[]');
+                let idx = localHist.findIndex(x => x.id === id);
+                if(idx > -1) {
+                    localHist[idx].count = (localHist[idx].count || 0) + 1;
+                } else {
+                    localHist.unshift({id: id, desc: desc, version: version, tipo: tipo, count: 1});
+                }
+                localStorage.setItem('audit_local_hist', JSON.stringify(localHist));
+                localStorage.setItem('audit_hist_trigger', Date.now()); // Despierta al panel lateral
+            } catch(e) { console.error(e); }
             
+            // Envío en segundo plano al servidor (ya no bloquea la UI)
             fetch('""" + backend_url + """/audit/history', {
                 method:'POST',
                 headers:{
@@ -79,17 +91,7 @@ def _build_resultado_html(resultados: list, token: str) -> str:
                     'Authorization':'Bearer """ + token + """'
                 },
                 body:JSON.stringify({id:id,desc:desc,version:version,tipo:tipo,count:1})
-            })
-            .then(res => {
-                if(!res.ok) {
-                    console.error('Error del servidor Render al guardar historial. Código:', res.status);
-                } else {
-                    console.log('¡Historial guardado con éxito en el backend para el ID:', id);
-                }
-            })
-            .catch(err => {
-                console.error('Error crítico de red o CORS en el navegador:', err);
-            });
+            }).catch(()=>{});
         }
     </script>
     <table>
@@ -178,16 +180,21 @@ def _build_history_html(items: list, token: str) -> str:
         .empty{{font-size:12px;color:#4B5563;text-align:center;padding:20px 5px;}}
     </style>
     <script>
-        var _items = {items_json};
-        
+        // Sincronizamos la data del servidor con la memoria del navegador al cargar
+        var _backendItems = {items_json};
+        localStorage.setItem('audit_local_hist', JSON.stringify(_backendItems));
+
         function render() {{
             var c = document.getElementById('hl');
-            if (!_items || _items.length === 0) {{
+            // Leemos directo de la memoria compartida e instantánea
+            var items = JSON.parse(localStorage.getItem('audit_local_hist') || '[]');
+            
+            if (!items || items.length === 0) {{
                 c.innerHTML = "<div class='empty'>Copia un ID para empezar.</div>";
                 return;
             }}
             var h = "";
-            _items.forEach(function(it) {{
+            items.forEach(function(it) {{
                 h += "<button class='bh' onclick=\\"copy(\\'"+it.id+"\\',\\'"+it.desc+"\\',this)\\" title=\\""+it.desc+"\\">"
                     + "<div class='hd'>"+it.desc+"</div>"
                     + "<div class='hv'>"+it.id+"</div>"
@@ -200,28 +207,34 @@ def _build_history_html(items: list, token: str) -> str:
         function copy(id, desc, btn) {{
             navigator.clipboard.writeText(id);
             btn.classList.add('copiado');
-            var idx = _items.findIndex(function(x){{return x.id===id;}});
-            if(idx>-1) {{ _items[idx].count = (_items[idx].count||0)+1; }}
-            _items.sort(function(a,b){{return (b.count||0)-(a.count||0);}});
+            var items = JSON.parse(localStorage.getItem('audit_local_hist') || '[]');
+            var idx = items.findIndex(function(x){{return x.id===id;}});
+            if(idx>-1) {{ items[idx].count = (items[idx].count||0)+1; }}
+            items.sort(function(a,b){{return (b.count||0)-(a.count||0);}});
+            localStorage.setItem('audit_local_hist', JSON.stringify(items));
             setTimeout(function(){{btn.classList.remove('copiado'); render();}}, 1200);
         }}
         
         function clearAll() {{
             if(confirm("¿Eliminar todo el historial?")) {{
-                _items = [];
+                localStorage.setItem('audit_local_hist', '[]');
                 render();
                 fetch('{backend_url}/audit/history', {{
                     method:'DELETE',
                     headers: {{'Authorization': 'Bearer {token}'}}
-                }})
-                .then(res => {{
-                    if(!res.ok) console.error('Error al borrar historial:', res.status);
-                }})
-                .catch(err => {{
-                    console.error('Error de red al borrar historial:', err);
-                }});
+                }}).catch(()=>{{}});
             }}
         }}
+        
+        // Escucha cambios instantáneos desde la tabla de resultados
+        window.addEventListener('storage', function(e) {
+            if(e.key === 'audit_hist_trigger') {
+                render();
+            }
+        });
+
+        // Verificación rápida de respaldo cada 300ms para asegurar fluidez máxima
+        setInterval(render, 300);
         
         window.onload = render;
     </script>
