@@ -195,10 +195,11 @@ def _build_history_html(items: list, token: str) -> str:
             }}
             var h = "";
             items.forEach(function(it) {{
+                // AQUÍ OCURRE EL CAMBIO: La versión está en la clase naranja (.hv) y el ID bajó a gris (.hti)
                 h += "<button class='bh' onclick=\\"copy(\\'"+it.id+"\\',\\'"+it.desc+"\\',this)\\" title=\\""+it.desc+"\\">"
                     + "<div class='hd'>"+it.desc+"</div>"
-                    + "<div class='hv'>"+it.id+"</div>"
-                    + "<div class='hti'>"+it.version+" · "+it.tipo+"</div>"
+                    + "<div class='hv'>"+it.version+"</div>"
+                    + "<div class='hti'>ID: "+it.id+" · "+it.tipo+"</div>"
                     + "</button>";
             }});
             c.innerHTML = h;
